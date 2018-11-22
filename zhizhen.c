@@ -2,8 +2,8 @@
 #include <stdlib.h>
 int main()
 {
-    int row = 40;
-    int col = 30;
+    int row = 4;
+    int col = 3;
     int *matrix_a_host;
     int *matrix_b_host;
     int *matrix_c_host;
@@ -43,26 +43,20 @@ int main()
     printf("\n-------------Matrix a-----------------\n");
     for(int i = 0; i < row*col; i++)
     {
-        if((i + 1) % col)
-            printf("%d ", *(matrix_a_host + i));
-        else
-            printf("%d \n", *(matrix_a_host + i));
+        printf("%d ",*(matrix_a_host + i));
+        if(i%col==col-1) printf("\n");//每输出3个换行。
     }
     printf("\n-------------Matrix b-----------------\n");
     for(int i = 0; i < row*col; i++)
     {
-        if((i + 1) % row)
-            printf("%d ", *(matrix_b_host + i));
-        else
-            printf("%d \n", *(matrix_b_host + i));
+        printf("%d ",*(matrix_b_host + i));
+        if(i%row==row-1) printf("\n");//每输出4个换行。
     }
     printf("\n-------------Matrix c-----------------\n");
     for(int i = 0; i < row*row; i++)
     {
-        if((i + 1) % row)
-            printf("%d ", *(matrix_c_host + i));
-        else
-            printf("%d \n", *(matrix_c_host + i));
+        printf("%d ",*(matrix_c_host + i));
+        if(i%row==row-1) printf("\n");//每输出4个换行。
     }
     free(matrix_a_host);
     free(matrix_b_host);
