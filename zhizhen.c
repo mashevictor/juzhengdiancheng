@@ -34,9 +34,14 @@ int main()
             for(int k = 0; k < col; k++)
             {
                 single_element += matrix_a_host[i *col + k] * matrix_b_host[row* k + j];
+//printf("\n-------------matrix_a_host[%d *%d + %d]%d*matrix_b_host[%d* %d + %d]%d=%d\n",i,col,k,matrix_a_host[i *col + k],row,k,j,matrix_b_host[row* k + j],matrix_a_host[i *col + k] * matrix_b_host[row* k + j]);
+//printf("\n-------------matrix_a_host[i *col + k]%d*matrix_b_host[row* k + j]%d=%d\n",matrix_a_host[i *col + k],matrix_b_host[row* k + j],matrix_a_host[i *col + k] * matrix_b_host[row* k + j]);
+	    printf("\nIvalue=%d",i);
+	    printf("\nJvalue=%d",j);
+	    printf("\nKvalue=%d",k);
             }
             matrix_c_host[row *i + j] = single_element;
-            printf("%5d ", single_element);
+            printf("\n%5d \n", single_element);
         }
     }
 
