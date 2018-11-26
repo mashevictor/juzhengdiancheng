@@ -1,24 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from __future__ import division
-from __future__ import print_function
-from __future__ import absolute_import
-import pycuda.driver as cuda
-import pycuda.autoinit
-import pycuda.gpuarray as gpuarray
-import multiprocessing as mp
-import threading as td
-import time
-import numpy as np
-import math
-import cmath
-np.set_printoptions(suppress=True)
 
-def normal():
-    shuzu = np.random.randn(4000,4000).astype(np.float32)
-    shuzu2 = np.random.randn(4000,4000).astype(np.float32)
-    he=np.dot(shuzu,shuzu2)
-    return he
+from __future__ import division
 
 """ 
 Multiples two square matrices together using multiple blocks and shared memory. 
@@ -102,7 +85,7 @@ __global__ void MatrixMulKernel(float *A, float *B, float *C)
 """
 
 # define the (square) matrix size
-MATRIX_SIZE = 4000
+MATRIX_SIZE = 4
 
 # define size of blocks and tiles sub-matrix 
 # (we assume that the block size is same as tile size)
@@ -111,10 +94,9 @@ BLOCK_SIZE = TILE_SIZE
 
 # create two random square matrices
 #a_cpu = np.random.randn(MATRIX_SIZE, MATRIX_SIZE).astype(np.float32)
-#print(a_cpu.shape)
 #b_cpu = np.random.randn(MATRIX_SIZE, MATRIX_SIZE).astype(np.float32)
-a_cpu = np.random.randn(4000,4000).astype(np.float32).astype(np.float32)
-b_cpu = np.random.randn(4000,4000).astype(np.float32).astype(np.float32)
+a_cpu = np.array([[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]]).astype(np.float32)
+b_cpu = np.array([[11,12,13,14],[15,16,17,18],[19,20,21,22],[23,24,25,26]]).astype(np.float32)
 
 # compute reference on the CPU to verify GPU computation
 c_cpu = np.dot(a_cpu, b_cpu)
@@ -138,7 +120,7 @@ mod = compiler.SourceModule(kernel_code)
 
 # get the kernel function from the compiled module
 matrixmul = mod.get_function("MatrixMulKernel")
-st_zuikuai = time.time()
+
 # call the kernel on the card
 matrixmul(
     # inputs
@@ -150,32 +132,22 @@ matrixmul(
     # block of multiple threads
     block = (TILE_SIZE, TILE_SIZE, 1), 
     )
-st1_zuikuai= time.time()
+
 # print the results
-print ("-" * 80)
-print ("Matrix A (GPU):")
-print (a_gpu.get())
+print "-" * 80
+print "Matrix A (GPU):"
+print a_gpu.get()
 
-print ("-" * 80)
-print ("Matrix B (GPU):")
-print (b_gpu.get())
+print "-" * 80
+print "Matrix B (GPU):"
+print b_gpu.get()
 
-print ("-" * 80)
-print ("Matrix C (GPU):")
-print (c_gpu.get())
+print "-" * 80
+print "Matrix C (GPU):"
+print c_gpu.get()
 
-print ("-" * 80)
-print ("CPU-GPU difference:")
-print (c_cpu - c_gpu.get())
-print ("L2 norm:", la.norm(c_cpu - c_gpu.get()))
+print "-" * 80
+print "CPU-GPU difference:"
+print c_cpu - c_gpu.get()
+print "L2 norm:", la.norm(c_cpu - c_gpu.get())
 np.allclose(c_cpu, c_gpu.get())
-
-st = time.time()
-normal()
-st1= time.time()
-print('normal time:', st1 - st)
-
-#st_zuikuai = time.time()
-#zuikuai()
-#st1_zuikuai= time.time()
-print('zuikuai time:', st1_zuikuai - st_zuikuai)
