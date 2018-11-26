@@ -96,6 +96,7 @@ __global__ void MatrixMulKernel(float *A, float *B, float *C)
 """
 
 def zuikuai():
+# define the (square) matrix size
     MATRIX_SIZE = 4000
 
 # define size of blocks and tiles sub-matrix 
@@ -105,18 +106,20 @@ def zuikuai():
 
 # create two random square matrices
 #a_cpu = np.random.randn(MATRIX_SIZE, MATRIX_SIZE).astype(np.float32)
+#print(a_cpu.shape)
 #b_cpu = np.random.randn(MATRIX_SIZE, MATRIX_SIZE).astype(np.float32)
     a_cpu = np.random.randn(4000,4000).astype(np.float32)
     b_cpu = np.random.randn(4000,4000).astype(np.float32)
 
+# compute reference on the CPU to verify GPU computation
+    #c_cpu = np.dot(a_cpu, b_cpu)
 
-# transfer host (CPU) memory to device (GPU) memory
-    #st_zuikuai = time.time()
+# transfer host (CPU) memory to device (GPU) memory 
     a_gpu = gpuarray.to_gpu(a_cpu) 
     b_gpu = gpuarray.to_gpu(b_cpu)
 
 # create empty gpu array for the result (C = A * B)
-    c_gpu = gpuarray.empty((MATRIX_SIZE, MATRIX_SIZE), np.float32)
+    c_gpu = gpuarray.empty((4000,4000), np.float32)
 
 # get the kernel code from the template 
 # by specifying the constants MATRIX_SIZE and BLOCK_SIZE
@@ -130,7 +133,6 @@ def zuikuai():
 
 # get the kernel function from the compiled module
     matrixmul = mod.get_function("MatrixMulKernel")
-
 # call the kernel on the card
     matrixmul(
     # inputs
@@ -143,16 +145,17 @@ def zuikuai():
     block = (TILE_SIZE, TILE_SIZE, 1), 
     )
 
-    #st1_zuikuai= time.time()
-    #print('zuikuai time:', st1_zuikuai - st_zuikuai) 
+# print the results
+    #print(c_gpu.get())
+    #return c_gpu
+
 
 
 st = time.time()
 normal()
 st1= time.time()
-print('normal time:', st1-st)
-#zuikuai()
-st2 = time.time()
+print('normal time:', st1 - st)
+st_zuikuai = time.time()
 zuikuai()
-st2end= time.time()
-print('normal2 time:', st2end-st2)
+st1_zuikuai= time.time()
+print('zuikuai time:', st1_zuikuai - st_zuikuai)

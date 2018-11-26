@@ -1,33 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from __future__ import division
-from __future__ import print_function
-from __future__ import absolute_import
-import pycuda.driver as cuda
-import pycuda.autoinit
-import pycuda.gpuarray as gpuarray
-import multiprocessing as mp
-import threading as td
-import time
-import numpy as np
-import math
-import cmath
-np.set_printoptions(suppress=True)
 
-def normal():
-    shuzu = np.random.randn(4000,4000).astype(np.float32)
-    shuzu2 = np.random.randn(4000,4000).astype(np.float32)
-    he=np.dot(shuzu,shuzu2)
-    print(he)
-    return he
+from __future__ import division
+
+""" 
+Multiples two square matrices together using multiple blocks and shared memory. 
+Each thread block is assigned a "tile" of the resulting matrix and is responsible
+for generating the elements in that tile.  Each thread in a block computes one element 
+of the tile.
+"""
 
 import numpy as np
 from numpy import linalg as la
 from pycuda import driver, compiler, gpuarray, tools
+from timeit import default_timer as timer
+
 
 # -- initialize the device
 import pycuda.autoinit
-
+import time
 kernel_code_template = """
 __global__ void MatrixMulKernel(float *A, float *B, float *C)
 {
@@ -95,44 +86,51 @@ __global__ void MatrixMulKernel(float *A, float *B, float *C)
 }
 """
 
-def zuikuai():
-    MATRIX_SIZE = 4000
+# define the (square) matrix size
+MATRIX_SIZE = 10000
 
 # define size of blocks and tiles sub-matrix 
 # (we assume that the block size is same as tile size)
-    TILE_SIZE = 2
-    BLOCK_SIZE = TILE_SIZE
+TILE_SIZE = 2
+BLOCK_SIZE = TILE_SIZE
 
 # create two random square matrices
 #a_cpu = np.random.randn(MATRIX_SIZE, MATRIX_SIZE).astype(np.float32)
 #b_cpu = np.random.randn(MATRIX_SIZE, MATRIX_SIZE).astype(np.float32)
-    a_cpu = np.random.randn(4000,4000).astype(np.float32)
-    b_cpu = np.random.randn(4000,4000).astype(np.float32)
+a_cpu = np.random.randn(10000,10000).astype(np.float32)
+b_cpu = np.random.randn(10000,10000).astype(np.float32)
 
+# compute reference on the CPU to verify GPU computation
+st = time.time()
+c_cpu = np.dot(a_cpu, b_cpu)
+st1= time.time()
+print('normal time:', st1 - st)
 
 # transfer host (CPU) memory to device (GPU) memory
-    #st_zuikuai = time.time()
-    a_gpu = gpuarray.to_gpu(a_cpu) 
-    b_gpu = gpuarray.to_gpu(b_cpu)
+start = timer()
+
+st_zuikuai = time.time()
+a_gpu = gpuarray.to_gpu(a_cpu) 
+b_gpu = gpuarray.to_gpu(b_cpu)
 
 # create empty gpu array for the result (C = A * B)
-    c_gpu = gpuarray.empty((MATRIX_SIZE, MATRIX_SIZE), np.float32)
+c_gpu = gpuarray.empty((MATRIX_SIZE, MATRIX_SIZE), np.float32)
 
 # get the kernel code from the template 
 # by specifying the constants MATRIX_SIZE and BLOCK_SIZE
-    kernel_code = kernel_code_template % { 
+kernel_code = kernel_code_template % { 
     'MATRIX_SIZE': MATRIX_SIZE,
     'BLOCK_SIZE': BLOCK_SIZE,
     }
 
 # compile the kernel code
-    mod = compiler.SourceModule(kernel_code)
+mod = compiler.SourceModule(kernel_code)
 
 # get the kernel function from the compiled module
-    matrixmul = mod.get_function("MatrixMulKernel")
+matrixmul = mod.get_function("MatrixMulKernel")
 
 # call the kernel on the card
-    matrixmul(
+matrixmul(
     # inputs
     a_gpu, b_gpu, 
     # output
@@ -143,16 +141,7 @@ def zuikuai():
     block = (TILE_SIZE, TILE_SIZE, 1), 
     )
 
-    #st1_zuikuai= time.time()
-    #print('zuikuai time:', st1_zuikuai - st_zuikuai) 
-
-
-st = time.time()
-normal()
-st1= time.time()
-print('normal time:', st1-st)
-#zuikuai()
-st2 = time.time()
-zuikuai()
-st2end= time.time()
-print('normal2 time:', st2end-st2)
+st1_zuikuai= time.time()
+print('zuikuai time:', st1_zuikuai - st_zuikuai)
+run_time = timer() - start
+print("gpu run time %f seconds " % run_time)  
